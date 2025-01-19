@@ -1,30 +1,40 @@
-# Workflow名（変更できる）
-name: CI
+# Workflow名（自由に変更可能）
+name: Deploy to Firebase Hosting
 
-# 何をトリガーにするかを設定（今回はgithubにpushした際に設定）
-on: [push]
+# トリガーの設定（mainブランチへのpush時に実行）
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-    FrontDeploy:
-        name: FrontDeploy
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repo
-              uses: actions/checkout@v2
-            - name: setup Node
-              uses: actions/setup-node@v2
-              with:
-                  node-version: 14.x
-                  registry-url: "https://registry.npmjs.org"
-            - name: Install Dependencies
-              run: yarn
-            - name: Build
-              run: |
-                  npm install
-                  npm install -g firebase-tools
-            - name: deploy to Firebase Hosting
-              run: |
-                  firebase deploy --token $FIREBASE_TOKEN
-              env:
-                  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  deploy:
+    name: Deploy to Firebase Hosting
+    runs-on: ubuntu-latest
 
+    steps:
+      # リポジトリをクローン
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      # Node.jsのセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
+
+      # 依存パッケージをインストール
+      - name: Install Dependencies
+        run: npm install
+
+      # アプリをビルド
+      - name: Build Project
+        run: npm run build
+
+      # Firebase CLIのインストール
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # Firebase Hostingにデプロイ
+      - name: Deploy to Firebase
+        run: firebase deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
